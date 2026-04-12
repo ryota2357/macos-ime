@@ -9,6 +9,10 @@ all: $(BUILD_DIR)/ime
 clean:
 	rm -rf $(BUILD_DIR)
 
+.PHONY: test
+test: $(BUILD_DIR)/ime
+	@bash test.sh $(BUILD_DIR)/ime
+
 $(BUILD_DIR)/ime: main.c | $(BUILD_DIR)
 	@$(CC) -o $@ $< $(CFLAGS) -O2 -DNDEBUG
 
