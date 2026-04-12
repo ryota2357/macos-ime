@@ -56,7 +56,6 @@ List all enabled keyboard input sources:
 $ ime list
 com.apple.keylayout.ABC
 com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese
-com.apple.inputmethod.Kotoeri.RomajiTyping
 ```
 
 Switch to a specific input source:

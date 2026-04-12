@@ -59,8 +59,9 @@ int cmd_list(void) {
     auto count = CFArrayGetCount(source_list);
     for (CFIndex i = 0; i < count; i++) {
         auto source = (TISInputSourceRef)CFArrayGetValueAtIndex(source_list, i);
+        auto selectable = (CFBooleanRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceIsSelectCapable);
         auto source_id = (CFStringRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
-        if (!source_id) continue;
+        if (selectable == kCFBooleanFalse || !source_id) continue;
         char buffer[256] = {0};
         if (CFStringGetCString(source_id, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
             puts(buffer);
