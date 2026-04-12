@@ -1,0 +1,46 @@
+{
+  description = "Tiny macOS CLI to get, set, and list keyboard input sources";
+
+  inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixpkgs-25.11-darwin";
+
+  outputs =
+    { self, nixpkgs }:
+    let
+      mk_macos-ime =
+        pkgs:
+        let
+          stdenv = pkgs.stdenv;
+          lib = pkgs.lib;
+        in
+        stdenv.mkDerivation (finalAttrs: {
+          name = "macos-ime";
+          src = pkgs.lib.cleanSource ./.;
+          makeFlags = [ "CC=${pkgs.stdenv.cc.targetPrefix}cc" ];
+          buildPhase = ''
+            runHook preBuild
+            make
+            runHook postBuild
+          '';
+          installPhase = ''
+            runHook preInstall
+            mkdir -p $out/bin
+            cp build/ime $out/bin/
+            runHook postInstall
+          '';
+          doCheck = true;
+          checkPhase = ''
+            runHook preCheck
+            make test
+            runHook postCheck
+          '';
+          meta = {
+            license = lib.licenses.mit;
+            mainProgram = "ime";
+          };
+        });
+    in
+    {
+      packages.x86_64-darwin.default = mk_macos-ime nixpkgs.legacyPackages.x86_64-darwin;
+      packages.aarch64-darwin.default = mk_macos-ime nixpkgs.legacyPackages.aarch64-darwin;
+    };
+}
