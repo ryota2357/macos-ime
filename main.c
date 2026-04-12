@@ -30,7 +30,6 @@ int cmd_get(void) {
         return EXIT_FAILURE;
     }
 
-    // TISGetInputSourceProperty follows the Get Rule: do not release the result.
     auto source_id = (CFStringRef)TISGetInputSourceProperty(current, kTISPropertyInputSourceID);
     if (!source_id) {
         fprintf(stderr, "Error: current input source has no ID\n");
