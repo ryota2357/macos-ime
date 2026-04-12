@@ -49,29 +49,6 @@ int cmd_get(void) {
     return EXIT_SUCCESS;
 }
 
-int cmd_list(void) {
-    auto source_list = copy_input_sources_matching(kTISPropertyInputSourceCategory, kTISCategoryKeyboardInputSource);
-    if (!source_list) {
-        fprintf(stderr, "Error: failed to enumerate input sources\n");
-        return EXIT_FAILURE;
-    }
-
-    auto count = CFArrayGetCount(source_list);
-    for (CFIndex i = 0; i < count; i++) {
-        auto source = (TISInputSourceRef)CFArrayGetValueAtIndex(source_list, i);
-        auto selectable = (CFBooleanRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceIsSelectCapable);
-        auto source_id = (CFStringRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
-        if (selectable == kCFBooleanFalse || !source_id) continue;
-        char buffer[256] = {0};
-        if (CFStringGetCString(source_id, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
-            puts(buffer);
-        }
-    }
-
-    CFRelease(source_list);
-    return EXIT_SUCCESS;
-}
-
 int cmd_set(const char* target_id_cstr) {
     auto target_id = CFStringCreateWithCString(kCFAllocatorDefault, target_id_cstr, kCFStringEncodingUTF8);
     if (!target_id) {
@@ -98,6 +75,30 @@ int cmd_set(const char* target_id_cstr) {
     return EXIT_SUCCESS;
 }
 
+int cmd_list(void) {
+    auto source_list = copy_input_sources_matching(kTISPropertyInputSourceCategory, kTISCategoryKeyboardInputSource);
+    if (!source_list) {
+        fprintf(stderr, "Error: failed to enumerate input sources\n");
+        return EXIT_FAILURE;
+    }
+
+    auto count = CFArrayGetCount(source_list);
+    for (CFIndex i = 0; i < count; i++) {
+        auto source = (TISInputSourceRef)CFArrayGetValueAtIndex(source_list, i);
+        auto selectable = (CFBooleanRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceIsSelectCapable);
+        auto source_id = (CFStringRef)TISGetInputSourceProperty(source, kTISPropertyInputSourceID);
+        if (selectable == kCFBooleanFalse || !source_id) continue;
+        char buffer[256] = {0};
+        if (CFStringGetCString(source_id, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
+            puts(buffer);
+        }
+    }
+
+    CFRelease(source_list);
+    return EXIT_SUCCESS;
+}
+
+
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Error: missing command\n");
@@ -107,11 +108,6 @@ int main(int argc, const char* argv[]) {
 
     const char* cmd = argv[1];
 
-    if (strcmp(cmd, "help") == 0 || strcmp(cmd, "-h") == 0 || strcmp(cmd, "--help") == 0) {
-        print_usage(stdout, argv[0]);
-        return EXIT_SUCCESS;
-    }
-
     if (strcmp(cmd, "get") == 0) {
         if (argc != 2) {
             fprintf(stderr, "Error: 'get' takes no arguments\n");
@@ -119,6 +115,15 @@ int main(int argc, const char* argv[]) {
             return EXIT_FAILURE;
         }
         return cmd_get();
+    }
+
+    if (strcmp(cmd, "set") == 0) {
+        if (argc != 3) {
+            fprintf(stderr, "Error: 'set' requires exactly one input source ID\n");
+            print_usage(stderr, argv[0]);
+            return EXIT_FAILURE;
+        }
+        return cmd_set(argv[2]);
     }
 
     if (strcmp(cmd, "list") == 0) {
@@ -130,13 +135,9 @@ int main(int argc, const char* argv[]) {
         return cmd_list();
     }
 
-    if (strcmp(cmd, "set") == 0) {
-        if (argc != 3) {
-            fprintf(stderr, "Error: 'set' requires exactly one input source ID\n");
-            print_usage(stderr, argv[0]);
-            return EXIT_FAILURE;
-        }
-        return cmd_set(argv[2]);
+    if (strcmp(cmd, "help") == 0 || strcmp(cmd, "-h") == 0 || strcmp(cmd, "--help") == 0) {
+        print_usage(stdout, argv[0]);
+        return EXIT_SUCCESS;
     }
 
     fprintf(stderr, "Error: unknown command '%s'\n", cmd);
