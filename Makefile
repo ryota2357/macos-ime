@@ -14,7 +14,7 @@ test: $(BUILD_DIR)/ime
 	@bash test.sh $(BUILD_DIR)/ime
 
 $(BUILD_DIR)/ime: main.c | $(BUILD_DIR)
-	@$(CC) -o $@ $< $(CFLAGS) -O2 -DNDEBUG
+	@$(CC) -o $@ $< $(CFLAGS) -O2 -flto -DNDEBUG
 
 $(BUILD_DIR):
 	@mkdir -p $@
