@@ -1,7 +1,23 @@
 #include <Carbon/Carbon.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+__attribute__((format(printf, 1, 2)))
+void print_error(const char* fmt, ...) {
+    static int use_color = -1;
+    if (use_color < 0) {
+        const char* no_color = getenv("NO_COLOR");
+        use_color = (no_color && no_color[0] != '\0') ? 0 : 1;
+    }
+    fputs(use_color ? "\033[1;31merror:\033[0m " : "error: ", stderr);
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputc('\n', stderr);
+}
 
 void print_usage(FILE* out, const char* prog_name) {
     fprintf(out, "Usage: %s <command> [args]\n", prog_name);
@@ -26,20 +42,20 @@ CFArrayRef copy_input_sources_matching(CFStringRef property_key, CFTypeRef prope
 int cmd_get(void) {
     auto current = TISCopyCurrentKeyboardInputSource();
     if (!current) {
-        fprintf(stderr, "Error: failed to get current keyboard input source\n");
+        print_error("failed to get current keyboard input source");
         return EXIT_FAILURE;
     }
 
     auto source_id = (CFStringRef)TISGetInputSourceProperty(current, kTISPropertyInputSourceID);
     if (!source_id) {
-        fprintf(stderr, "Error: current input source has no ID\n");
+        print_error("current input source has no ID");
         CFRelease(current);
         return EXIT_FAILURE;
     }
 
     char buffer[256] = {0};
     if (!CFStringGetCString(source_id, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
-        fprintf(stderr, "Error: failed to convert input source ID to UTF-8\n");
+        print_error("failed to convert input source ID to UTF-8");
         CFRelease(current);
         return EXIT_FAILURE;
     }
@@ -52,14 +68,14 @@ int cmd_get(void) {
 int cmd_set(const char* target_id_cstr) {
     auto target_id = CFStringCreateWithCString(kCFAllocatorDefault, target_id_cstr, kCFStringEncodingUTF8);
     if (!target_id) {
-        fprintf(stderr, "Error: failed to encode input source ID\n");
+        print_error("failed to encode input source ID");
         return EXIT_FAILURE;
     }
 
     auto source_list = copy_input_sources_matching(kTISPropertyInputSourceID, target_id);
     CFRelease(target_id);
     if (!source_list || CFArrayGetCount(source_list) == 0) {
-        fprintf(stderr, "Error: input source '%s' not found\n", target_id_cstr);
+        print_error("input source '%s' not found", target_id_cstr);
         if (source_list) CFRelease(source_list);
         return EXIT_FAILURE;
     }
@@ -69,7 +85,7 @@ int cmd_set(const char* target_id_cstr) {
     CFRelease(source_list);
 
     if (status != noErr) {
-        fprintf(stderr, "Error: failed to select input source '%s' (OSStatus %d)\n", target_id_cstr, (int)status);
+        print_error("failed to select input source '%s' (OSStatus %d)", target_id_cstr, (int)status);
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -78,7 +94,7 @@ int cmd_set(const char* target_id_cstr) {
 int cmd_list(void) {
     auto source_list = copy_input_sources_matching(kTISPropertyInputSourceCategory, kTISCategoryKeyboardInputSource);
     if (!source_list) {
-        fprintf(stderr, "Error: failed to enumerate input sources\n");
+        print_error("failed to enumerate input sources");
         return EXIT_FAILURE;
     }
 
@@ -101,7 +117,7 @@ int cmd_list(void) {
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Error: missing command\n");
+        print_error("missing command");
         print_usage(stderr, argv[0]);
         return EXIT_FAILURE;
     }
@@ -110,7 +126,7 @@ int main(int argc, const char* argv[]) {
 
     if (strcmp(cmd, "get") == 0) {
         if (argc != 2) {
-            fprintf(stderr, "Error: 'get' takes no arguments\n");
+            print_error("'get' takes no arguments");
             print_usage(stderr, argv[0]);
             return EXIT_FAILURE;
         }
@@ -119,7 +135,7 @@ int main(int argc, const char* argv[]) {
 
     if (strcmp(cmd, "set") == 0) {
         if (argc != 3) {
-            fprintf(stderr, "Error: 'set' requires exactly one input source ID\n");
+            print_error("'set' requires exactly one input source ID");
             print_usage(stderr, argv[0]);
             return EXIT_FAILURE;
         }
@@ -128,7 +144,7 @@ int main(int argc, const char* argv[]) {
 
     if (strcmp(cmd, "list") == 0) {
         if (argc != 2) {
-            fprintf(stderr, "Error: 'list' takes no arguments\n");
+            print_error("'list' takes no arguments");
             print_usage(stderr, argv[0]);
             return EXIT_FAILURE;
         }
@@ -140,7 +156,7 @@ int main(int argc, const char* argv[]) {
         return EXIT_SUCCESS;
     }
 
-    fprintf(stderr, "Error: unknown command '%s'\n", cmd);
+    print_error("unknown command '%s'", cmd);
     print_usage(stderr, argv[0]);
     return EXIT_FAILURE;
 }
