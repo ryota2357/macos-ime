@@ -1,0 +1,28 @@
+#compdef ime
+
+local context state state_descr line
+typeset -A opt_args
+
+_arguments -C \
+  '1: :->command' \
+  '*:: :->args'
+
+case $state in
+  command)
+    local -a commands
+    commands=(
+      'get:Print the current keyboard input source ID'
+      'set:Switch to the specified input source ID'
+      'list:List enabled keyboard input source IDs'
+      'help:Print help'
+    )
+    _describe 'command' commands
+    ;;
+  args)
+    if [[ $line[1] == set ]] && (( CURRENT == 2 )); then
+      local -a sources
+      sources=(${(f)"$(ime list 2>/dev/null)"})
+      _describe 'input source' sources
+    fi
+    ;;
+esac

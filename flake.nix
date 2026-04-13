@@ -15,6 +15,7 @@
         stdenv.mkDerivation (finalAttrs: {
           name = "macos-ime";
           src = pkgs.lib.cleanSource ./.;
+          nativeBuildInputs = [ pkgs.installShellFiles ];
           makeFlags = [ "CC=${pkgs.stdenv.cc.targetPrefix}cc" ];
           buildPhase = ''
             runHook preBuild
@@ -25,6 +26,10 @@
             runHook preInstall
             mkdir -p $out/bin
             cp build/ime $out/bin/
+            installShellCompletion --cmd ime \
+              --bash completions/ime.bash \
+              --zsh  completions/_ime \
+              --fish completions/ime.fish
             runHook postInstall
           '';
           doCheck = true;
