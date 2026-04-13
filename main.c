@@ -6,11 +6,8 @@
 
 __attribute__((format(printf, 1, 2)))
 void print_error(const char* fmt, ...) {
-    static int use_color = -1;
-    if (use_color < 0) {
-        const char* no_color = getenv("NO_COLOR");
-        use_color = (no_color && no_color[0] != '\0') ? 0 : 1;
-    }
+    const char* no_color = getenv("NO_COLOR");
+    bool use_color = !(no_color && no_color[0] != '\0');
     fputs(use_color ? "\033[1;31merror:\033[0m " : "error: ", stderr);
     va_list ap;
     va_start(ap, fmt);
