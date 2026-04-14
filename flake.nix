@@ -17,11 +17,6 @@
           src = pkgs.lib.cleanSource ./.;
           nativeBuildInputs = [ pkgs.installShellFiles ];
           makeFlags = [ "CC=${pkgs.stdenv.cc.targetPrefix}cc" ];
-          buildPhase = ''
-            runHook preBuild
-            make
-            runHook postBuild
-          '';
           installPhase = ''
             runHook preInstall
             mkdir -p $out/bin
@@ -33,11 +28,6 @@
             runHook postInstall
           '';
           doCheck = true;
-          checkPhase = ''
-            runHook preCheck
-            make test
-            runHook postCheck
-          '';
           meta = {
             license = lib.licenses.mit;
             mainProgram = "ime";
