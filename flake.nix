@@ -19,8 +19,7 @@
           makeFlags = [ "CC=${pkgs.stdenv.cc.targetPrefix}cc" ];
           installPhase = ''
             runHook preInstall
-            mkdir -p $out/bin
-            cp build/ime $out/bin/
+            install -Dm755 build/ime -t $out/bin
             installShellCompletion --cmd ime \
               --bash completions/ime.bash \
               --zsh  completions/_ime \
