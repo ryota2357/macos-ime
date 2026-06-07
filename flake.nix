@@ -1,7 +1,7 @@
 {
   description = "Tiny macOS CLI to get, set, and list keyboard input sources";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixpkgs-25.11-darwin";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixpkgs-26.05-darwin";
 
   outputs =
     { self, nixpkgs }:
